@@ -1,0 +1,85 @@
+---
+title: "p14"
+format: html
+---
+24.4.4 Exercise:
+```{r}
+library(tidyverse)
+library(repurrrsive)
+library(jsonlite)
+```
+
+1. Roughly estimate when gh_repos was created. Why can you only roughly estimate the date?
+
+Not sure when(maybe 2018?), but when I look at the help page of gh_repos, it contains many updated infor from time to time and cover package and data, so we can't estimate the exact date.
+
+2. The owner column of gh_repo contains a lot of duplicated information because each owner can have many repos. Can you construct a owners data frame that contains one row for each owner? (Hint: does distinct() work with list-cols?)
+```{r}
+data(gh_repos)
+
+repos <- gh_repos %>%
+
+owners <- gh_repos %>%
+  distinct(owner) %>%  
+  unnest_wider(owner)
+
+head(owners)
+```
+
+3. Follow the steps used for titles to create similar tables for the aliases, allegiances, books, and TV series for the Game of Thrones characters.
+
+```{r}
+characters <- got_chars
+aliases <- characters |> 
+  unnest_wider(json) |> 
+  select(name, aliases) |> 
+  unnest_longer(aliases) |> 
+  filter(aliases != "") 
+
+allegiances <- characters |>
+  unnest_wider(json) |>
+  select(name, allegiances) |>
+  unnest_longer(allegiances) |>
+  filter(allegiances != "") 
+
+books <- characters |> 
+  unnest_wider(json) |> 
+  select(name, books) |> 
+  unnest_longer(books) |> 
+  filter(books != "") 
+
+tv_series <- characters |> 
+  unnest_wider(json) |> 
+  select(name, tvSeries) |> 
+  unnest_longer(tvSeries) |> 
+  filter(tvSeries != "") 
+
+```
+
+4. Explain the following code line-by-line. Why is it interesting? Why does it work for got_chars but might not work in general?
+```{r}
+tibble(json = got_chars) |> 
+  unnest_wider(json) |> 
+  select(id, where(is.list)) |> 
+  pivot_longer(
+    where(is.list), 
+    names_to = "name", 
+    values_to = "value"
+  ) |>  
+  unnest_longer(value)
+```
+tibble(json = got_chars) creates a tibble with one column, named json, containing the got_chars dataset. unnest_wider(json) applies its function to the json column. select(id, where(is.list)) selects only the list columns and where() function finds is.list is TRUE. pivot_longer() reshapes the data to long format by creating a new row for each element of the list-columns. The resulting dataset has three columns: id, name, and value, and unnest_longer(value) is applied to the value column. 
+
+
+5. In gmaps_cities, what does address_components contain? Why does the length vary between rows? Unnest it appropriately to figure it out. (Hint: types always appears to contain two elements. Does unnest_wider() make it easier to work with than unnest_longer()?).
+
+```{r}
+library(tidyr)
+library(dplyr)
+
+gmaps_cities %>%
+  unnest_wider(address_components) %>%
+  select(city, types, value)
+
+```
+The address_components column contains a list of components of address for each city. The length of the address_components list varies between rows because different cities have different levels of detail in their address components. Yes, the unnnest_wider() makes it easier because all values has the same stuff.
