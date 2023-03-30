@@ -20,7 +20,7 @@ data(gh_repos)
 repos <- gh_repos %>%
 
 owners <- gh_repos %>%
-  distinct(owner) %>%  
+  distinct(owner) %>% 
   unnest_wider(owner)
 
 head(owners)
